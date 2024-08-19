@@ -20,3 +20,14 @@ generate-note-api:
 	--go-grpc_out=pkg/note_v1 --go-grpc_opt=paths=source_relative \
 	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	api/note_v1/note.proto
+
+build:
+	GOOS=linux GOARCH=amd64 go build -o service_linux cmd/grpc_server/main.go
+
+copy-to-server:
+	scp service_linux root@31.129.59.145:
+
+docker-build-and-push:
+	docker buildx build --no-cache --platform linux/amd64 -t cr.selcloud.ru/xeeetu/test-server:v0.0.1 .
+	docker login -u token -p CRgAAAAAKruUnuikRyAI4uy09y7gZTzEbEf6L4Eo cr.selcloud.ru/xeeetu
+	docker push cr.selcloud.ru/xeeetu/test-server:v0.0.1
