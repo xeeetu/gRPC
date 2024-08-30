@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	desc "github.com/xeeetu/gRPC/pkg/note_v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"time"
+
+	"github.com/xeeetu/gRPC/config/pkg/note_v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -27,12 +28,12 @@ func main() {
 		}
 	}()
 
-	c := desc.NewNoteV1Client(conn)
+	c := note_v1.NewNoteV1Client(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := c.Get(ctx, &desc.GetRequest{Id: noteId})
+	r, err := c.Get(ctx, &note_v1.GetRequest{Id: noteId})
 	if err != nil {
 		log.Fatalf("could not get note: %v", err)
 	}
