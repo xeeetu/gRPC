@@ -18,7 +18,6 @@
 # vendor/
 .idea/
 bin/
-postgres/bin/
 
 # Go workspace file
 go.work

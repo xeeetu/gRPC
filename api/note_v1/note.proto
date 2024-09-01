@@ -19,8 +19,6 @@ service NoteV1 {
 message NoteInfo {
   string title = 1;
   string content = 2;
-  string author = 3;
-  bool is_public = 4;
 }
 
 message Note {
@@ -33,8 +31,6 @@ message Note {
 message UpdateNoteInfo {
   google.protobuf.StringValue title = 1;
   google.protobuf.StringValue content = 2;
-  google.protobuf.StringValue author = 3;
-  google.protobuf.BoolValue is_public = 4;
 }
 
 message CreateRequest {
