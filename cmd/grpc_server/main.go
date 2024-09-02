@@ -9,8 +9,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/xeeetu/gRPC/internal/config"
 	"github.com/xeeetu/gRPC/internal/config/env"
-	"github.com/xeeetu/gRPC/internal/repository"
-	"github.com/xeeetu/gRPC/internal/repository/note"
+
+	noteAPI "github.com/xeeetu/gRPC/internal/api/note"
+	noteRepository "github.com/xeeetu/gRPC/internal/repository/note"
+	noteService "github.com/xeeetu/gRPC/internal/service/note"
 	desc "github.com/xeeetu/gRPC/pkg/note_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -20,33 +22,6 @@ var configPath string
 
 func init() {
 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
-}
-
-type server struct {
-	desc.UnimplementedNoteV1Server
-	noteRepository repository.NoteRepository
-}
-
-func (s *server) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	id, err := s.noteRepository.Create(ctx, req.GetInfo())
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("created note with id %d", id)
-
-	return &desc.CreateResponse{Id: id}, nil
-}
-
-func (s *server) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	noteObj, err := s.noteRepository.Get(ctx, req.GetId())
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("id: %d, title: %s, content: %s, created_at: %v, updated_at: %v\n", noteObj.GetId(), noteObj.Info.Title, noteObj.Info.Content, noteObj.CreatedAt, noteObj.UpdatedAt)
-
-	return &desc.GetResponse{Note: noteObj}, nil
 }
 
 func main() {
@@ -81,11 +56,12 @@ func main() {
 	}
 	defer pool.Close()
 
-	noteRepo := note.NewRepository(pool)
+	noteRepo := noteRepository.NewRepository(pool)
+	noteSrv := noteService.NewService(noteRepo)
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	desc.RegisterNoteV1Server(s, &server{noteRepository: noteRepo})
+	desc.RegisterNoteV1Server(s, noteAPI.NewImplementation(noteSrv))
 
 	log.Printf("server listening on %s", grpcConfig.Address())
 
