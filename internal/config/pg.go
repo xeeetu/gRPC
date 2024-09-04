@@ -1,17 +1,15 @@
-package env
+package config
 
 import (
 	"errors"
 	"os"
-
-	"github.com/xeeetu/gRPC/internal/config"
 )
 
 const (
 	dsnEnvName = "PG_DSN"
 )
 
-var _ config.PGConfig = (*pgConfig)(nil)
+var _ PGConfig = (*pgConfig)(nil)
 
 type pgConfig struct {
 	dsn string

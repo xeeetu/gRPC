@@ -14,7 +14,7 @@ func (i *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.G
 		return nil, err
 	}
 
-	log.Printf("returning note: id: %d, title: %s, content: %s, createAt: %v, updatedAt: %v", noteObj.ID, noteObj.Info, noteObj.CreatedAt, noteObj.UpdatedAt)
+	log.Printf("returning note: id: %d, title: %s, content: %s, createAt: %v, updatedAt: %v", noteObj.ID, noteObj.Info.Title, noteObj.Info.Content, noteObj.CreatedAt, noteObj.UpdatedAt)
 
 	return &desc.GetResponse{Note: converter.ToNoteFromService(noteObj)}, nil
 }
