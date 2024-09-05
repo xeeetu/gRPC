@@ -16,3 +16,12 @@ type NoteInfo struct {
 	Title   string
 	Content string
 }
+
+type UpdateNoteInfo struct {
+	Title   *string
+	Content *string
+}
+type UpdateNote struct {
+	ID   int64
+	Info *UpdateNoteInfo
+}
