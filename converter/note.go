@@ -32,3 +32,22 @@ func ToNoteInfoFromDesc(noteInfo *desc.NoteInfo) *model.NoteInfo {
 		Content: noteInfo.Content,
 	}
 }
+
+func ToUpdateNoteInfoFromDesc(noteInfo *desc.UpdateNoteInfo) *model.UpdateNoteInfo {
+	var updateNoteInfo = &model.UpdateNoteInfo{}
+
+	if noteInfo.Title != nil {
+		str := noteInfo.Title.GetValue()
+		updateNoteInfo.Title = &str
+	}
+	if noteInfo.Content != nil {
+		str := noteInfo.Content.GetValue()
+		updateNoteInfo.Content = &str
+	}
+
+	return updateNoteInfo
+}
+
+func ToUpdateNoteFromDesc(id int64, noteInfo *desc.UpdateNoteInfo) *model.UpdateNote {
+	return &model.UpdateNote{ID: id, Info: ToUpdateNoteInfoFromDesc(noteInfo)}
+}

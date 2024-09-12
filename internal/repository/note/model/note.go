@@ -16,3 +16,8 @@ type Info struct {
 	Title   string `db:"tittle"`
 	Content string `db:"content"`
 }
+
+type UpdateNote struct {
+	ID   int64 `db:"id"`
+	Info Info  `db:""`
+}
