@@ -3,7 +3,6 @@ package note
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -25,7 +24,7 @@ func (r *repo) Create(ctx context.Context, info *model.NoteInfo) (int64, error) 
 	var id int64
 	err := r.db.QueryRow(ctx, "INSERT INTO note (title, content) VALUES ($1, $2) RETURNING id", info.Title, info.Content).Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("reportRepo.Create: %w", err)
 	}
 	return id, nil
 }
@@ -35,7 +34,7 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.Note, error) {
 	err := r.db.QueryRow(ctx, "SELECT id, title, content, created_at, updated_at FROM note WHERE id = $1", id).
 		Scan(&note.ID, &note.Info.Title, &note.Info.Content, &note.CreatedAt, &note.UpdatedAt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reportRepo.Get,id-%d: %w", id, err)
 	}
 
 	return converter.ToNoteFromRepo(&note), nil
@@ -43,13 +42,16 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.Note, error) {
 
 func (r *repo) Delete(ctx context.Context, id int64) error {
 	_, err := r.db.Exec(ctx, "DELETE FROM note WHERE id = $1", id)
-	return err
+	if err != nil {
+		return fmt.Errorf("reportRepo.Delete, id-%d: %w", id, err)
+	}
+	return nil
 }
 
 func (r *repo) List(ctx context.Context, offset int64, limit int64) ([]*model.Note, error) {
 	res, err := r.db.Query(ctx, "SELECT id, title, content, created_at, updated_at FROM note WHERE id >= $1 LIMIT $2", offset, limit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reportRepo.List, limit-%d, offset-%d: %w", limit, offset, err)
 	}
 	defer res.Close()
 
@@ -59,7 +61,7 @@ func (r *repo) List(ctx context.Context, offset int64, limit int64) ([]*model.No
 		var note model.Note
 		err = res.Scan(&note.ID, &note.Info.Title, &note.Info.Content, &note.CreatedAt, &note.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("reportRepo.List: %w", err)
 		}
 		notes = append(notes, &note)
 	}
@@ -69,29 +71,32 @@ func (r *repo) List(ctx context.Context, offset int64, limit int64) ([]*model.No
 
 func (r *repo) Update(ctx context.Context, updateInfo *model.UpdateNote) error {
 	query := "UPDATE note SET"
-	values := []interface{}{}
+	values := []any{}
 	numberParam := 1
 
 	if updateInfo.Info.Title != nil {
-		query += " title = $" + strconv.Itoa(numberParam) + ","
+		query = fmt.Sprintf("%s title = $%d,", query, numberParam)
 		values = append(values, *updateInfo.Info.Title)
 		numberParam++
 	}
 	if updateInfo.Info.Content != nil {
-		query += " content = $" + strconv.Itoa(numberParam) + ","
+		query = fmt.Sprintf("%s content = $%d,", query, numberParam)
 		values = append(values, *updateInfo.Info.Content)
 		numberParam++
 	}
 
 	if numberParam > 1 {
-		query += " updated_at = now(),"
+		query = fmt.Sprintf("%s updated_at = now(),", query)
 	}
 
-	query = strings.TrimSuffix(query, ",") + " WHERE id = $" + strconv.Itoa(numberParam)
+	query = strings.TrimSuffix(query, ",")
+	query = fmt.Sprintf("%s WHERE id = $%d", query, numberParam)
+
 	values = append(values, updateInfo.ID)
 
-	fmt.Println(query)
-	fmt.Println(values)
 	_, err := r.db.Exec(ctx, query, values...)
-	return err
+	if err != nil {
+		return fmt.Errorf("reportRepo.Update: %w", err)
+	}
+	return nil
 }

@@ -1,8 +1,14 @@
 package note
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 func (s *serv) Delete(ctx context.Context, id int64) error {
 	err := s.noteRepository.Delete(ctx, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("s.noteRepository.Delete: %w", err)
+	}
+	return nil
 }
